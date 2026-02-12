@@ -2,9 +2,12 @@ from mcp.server.fastmcp import FastMCP
 from .feishu_client import FeishuClient
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
-# 自动加载 .env 文件
-load_dotenv()
+# 自动加载 .env 文件 (从当前文件所在目录的上一级查找)
+# src/server.py -> src/ -> .env
+env_path = Path(__file__).parent.parent / '.env'
+load_dotenv(dotenv_path=env_path)
 
 # 初始化 MCP Server
 mcp = FastMCP("feishu")
