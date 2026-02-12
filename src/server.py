@@ -1,5 +1,5 @@
 from mcp.server.fastmcp import FastMCP
-from .feishu_client import FeishuClient
+from feishu_client import FeishuClient
 import os
 from dotenv import load_dotenv
 from pathlib import Path
