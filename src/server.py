@@ -27,28 +27,48 @@ async def get_doc_content(doc_id: str) -> str:
 @mcp.tool()
 async def read_feishu_doc(url: str) -> str:
     """
-    读取飞书云文档。
+    读取飞书云文档（支持 docx 和 wiki 链接）。
     Args:
-        url: 飞书文档的完整链接 (e.g. https://xxx.feishu.cn/docx/doxcn...)
+        url: 飞书文档的完整链接 
+             e.g. https://xxx.feishu.cn/docx/doxcn...
+             e.g. https://xxx.feishu.cn/wiki/wikcn...
     """
+    client = get_client()
     try:
-        # 简单提取 token: 从 url 中截取
-        if "/docx/" in url:
-            doc_id = url.split("/docx/")[1].split("?")[0].split("/")[0]
-        elif "feishu.cn/docs/" in url: # 兼容旧版 doc
-             return "Error: 暂不支持旧版 doc，请升级为 docx"
+        real_token = ""
+        
+        # 1. 处理 Wiki 链接
+        if "/wiki/" in url:
+            try:
+                # 提取 wiki token
+                wiki_token = url.split("/wiki/")[1].split("?")[0]
+                # 获取真实 docx token
+                real_token = await client.get_wiki_node_info(wiki_token)
+            except Exception as e:
+                return f"Error resolving wiki url: {str(e)}"
+                
+        # 2. 处理 Docx 链接
+        elif "/docx/" in url:
+            try:
+                real_token = url.split("/docx/")[1].split("?")[0]
+            except:
+                return "Error: Invalid docx url format"
+        
+        # 3. 兜底：假设输入的是 token
         else:
-            # 尝试直接把 url 当作 token 使用（兜底）
-            doc_id = url
+            real_token = url
             
-        client = get_client()
-        try:
-            content = await client.get_document_raw_content(doc_id)
-            return content
-        finally:
-            await client.close()
+        if not real_token:
+            return "Error: Could not extract document token"
+
+        # 读取内容
+        content = await client.get_document_raw_content(real_token)
+        return content
+        
     except Exception as e:
         return f"Error reading doc: {str(e)}"
+    finally:
+        await client.close()
 
 if __name__ == "__main__":
     mcp.run()
