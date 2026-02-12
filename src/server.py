@@ -1,6 +1,10 @@
 from mcp.server.fastmcp import FastMCP
 from .feishu_client import FeishuClient
 import os
+from dotenv import load_dotenv
+
+# 自动加载 .env 文件
+load_dotenv()
 
 # 初始化 MCP Server
 mcp = FastMCP("feishu")
